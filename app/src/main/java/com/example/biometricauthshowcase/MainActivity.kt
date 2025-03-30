@@ -11,6 +11,7 @@ import com.example.biometricauthshowcase.utils.BiometricHelper
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var checkAuthButton: Button
     private lateinit var simpleAuthButton: Button
     private lateinit var biometricHelper: BiometricHelper
 
@@ -23,12 +24,31 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        simpleAuthButton = findViewById(R.id.simpleAuthButton)
-        simpleAuthButton.setOnClickListener {
+
+        biometricHelper = BiometricHelper(this)
+        checkBiometricAvailability()
+        biometricHelper.setupBiometricAuthentication(onResult = {result -> when (result) {
+            is BiometricHelper.AuthResult.Success -> {
+                Toast.makeText(this, "Authenticated successfully!", Toast.LENGTH_SHORT).show()
+            }
+            is BiometricHelper.AuthResult.Error -> {
+                Toast.makeText(this, "Authentication error: ${result.message}", Toast.LENGTH_SHORT).show()
+            }
+            is BiometricHelper.AuthResult.Failure -> {
+                Toast.makeText(this, "Authentication failed", Toast.LENGTH_SHORT).show()
+            }
+        }})
+
+        checkAuthButton = findViewById(R.id.checkAuthButton)
+        checkAuthButton.setOnClickListener {
             checkBiometricAvailability()
         }
-        biometricHelper = BiometricHelper()
-        checkBiometricAvailability()
+
+        simpleAuthButton = findViewById(R.id.simpleAuthButton)
+        simpleAuthButton.setOnClickListener {
+            performAuthentication()
+        }
+
     }
     private fun checkBiometricAvailability() {
         val status = biometricHelper.checkBiometricCapability(this)
@@ -41,6 +61,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         Toast.makeText(this, statusMessage, Toast.LENGTH_SHORT).show()
-
     }
+
+    private fun performAuthentication() {
+        biometricHelper.authenticate()
+    }
+
 }
